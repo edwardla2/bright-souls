@@ -1,0 +1,29 @@
+{
+  "name": "eldenring",
+  "tree": {
+    "$className": "DataModel",
+
+    "ServerScriptService": {
+      "$path": "src/server"
+    },
+
+    "StarterPlayer": {
+      "StarterPlayerScripts": {
+        "$path": "src/client"
+      }
+    },
+
+    "ReplicatedStorage": {
+      "Shared": {
+        "$path": "src/shared"
+      },
+
+      "Remotes": {
+        "$className": "Folder",
+        "AttackEvent": { "$className": "RemoteEvent" },
+        "DodgeEvent": { "$className": "RemoteEvent" },
+        "StaminaSync": { "$className": "RemoteEvent" }
+      }
+    }
+  }
+}

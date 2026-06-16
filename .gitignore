@@ -1,0 +1,19 @@
+# Local tooling + test harness (downloaded binaries, generated test file)
+.tools/
+
+# Rojo / Roblox build artifacts
+*.rbxl
+*.rbxlx
+*.rbxm
+*.rbxmx
+*.rbxl.lock
+*.rbxlx.lock
+
+# Toolchain managers
+.foreman/
+
+# OS / editor cruft
+.DS_Store
+*.swp
+.vscode/
+.idea/
