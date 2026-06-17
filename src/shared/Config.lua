@@ -37,4 +37,10 @@ return {
 	ENEMY_ATTACK_COOLDOWN = 1.0, -- seconds between enemy attacks
 	ENEMY_WINDUP_TIME = 0.3, -- telegraph duration before the hit lands (the dodge window)
 	ENEMY_RUNE_REWARD = 50, -- runes dropped on death (stored as a model attribute for Phase 2)
+
+	-- Ember Flask (Phase 3: healing)
+	FLASK_MAX_CHARGES = 4, -- charges available, refilled at a Site of Grace
+	FLASK_HEAL_AMOUNT = 50, -- HP restored per drink (clamped to MaxHealth)
+	FLASK_DRINK_TIME = 1.1, -- seconds; slow on purpose — you're vulnerable while drinking
+	FLASK_KEY = Enum.KeyCode.R, -- key the client binds to drink
 }

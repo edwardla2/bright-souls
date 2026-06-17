@@ -75,15 +75,15 @@ Legend:
 
 **Goal:** Checkpoints that heal, respawn enemies, and become your spawn point.
 
-- [ ] Create `src/server/GraceSystem.server.lua`
-- [ ] CollectionService "Grace" tag for checkpoint parts
-- [ ] Interact prompt (ProximityPrompt) on each Grace
-- [ ] Resting: refill HP + stamina, refill Ember Flasks, set this Grace as spawn point
-- [ ] Resting respawns all "Enemy"-tagged enemies (re-clone from stored originals)
-- [ ] Create `src/client/FlaskUI.client.lua` — flask charge counter
-- [ ] Ember Flask healing: limited charges, slow drink animation, heals a chunk of HP
-- [ ] Flask drinking leaves you vulnerable (no i-frames, can be interrupted by damage)
-- [ ] Respawn on death now sends player to last-rested Grace
+- [x] Create `src/server/GraceSystem.server.lua`
+- [x] CollectionService "Grace" tag for checkpoint parts
+- [x] Interact prompt (ProximityPrompt) on each Grace
+- [x] Resting: refill HP + stamina, refill Ember Flasks, set this Grace as spawn point
+- [x] Resting respawns all "Enemy"-tagged enemies (re-clone from stored originals)
+- [x] Create `src/client/FlaskUI.client.lua` — flask charge counter
+- [x] Ember Flask healing: limited charges, slow drink animation, heals a chunk of HP
+- [x] Flask drinking leaves you vulnerable (no i-frames) — interrupt-on-damage deferred this version
+- [x] Respawn on death now sends player to last-rested Grace
 - (STUDIO) Place a Grace part in the workspace, tag it "Grace", give it a glow
 - (TEST) Interacting with a Grace heals you and refills flasks
 - (TEST) Resting respawns dead enemies

@@ -23,7 +23,19 @@
         "AttackEvent": { "$className": "RemoteEvent" },
         "DodgeEvent": { "$className": "RemoteEvent" },
         "StaminaSync": { "$className": "RemoteEvent" },
-        "RuneSync": { "$className": "RemoteEvent" }
+        "RuneSync": { "$className": "RemoteEvent" },
+        "GraceRested": { "$className": "RemoteEvent" },
+        "FlaskDrink": { "$className": "RemoteEvent" },
+        "FlaskSync": { "$className": "RemoteEvent" }
+      }
+    },
+
+    "ServerStorage": {
+      "$className": "ServerStorage",
+      "Bindables": {
+        "$className": "Folder",
+        "RefillStamina": { "$className": "BindableEvent" },
+        "RefillFlasks": { "$className": "BindableEvent" }
       }
     }
   }

@@ -258,9 +258,10 @@ task.spawn(function()
 end)
 
 --[[
-	PHASE 3 NOTE — RESPAWN POINT IS TEMPORARY.
-	Right now we rely on Roblox's default respawn (the workspace SpawnLocation).
-	In Phase 3, respawn must instead send the player to the last Site of Grace they
-	rested at. When that lands, set the player's RespawnLocation (or teleport the new
-	character) to the active Grace here in onCharacterAdded, and remove this note.
+	RESPAWN POINT — OWNED BY GraceSystem (Phase 3).
+	Respawn placement now lives in GraceSystem.server.lua: it tracks each player's
+	last-rested Site of Grace and teleports the respawned character there (falling
+	back to the default SpawnLocation if they have never rested). This script
+	deliberately does NOT decide where players respawn, to keep a single source of
+	truth. PlayerData owns only rune state, death/bloodstain, and lastPos tracking.
 ]]

@@ -197,3 +197,19 @@ DodgeEvent.OnServerEvent:Connect(function(player)
 	attachment:Destroy()
 	data.iframes = false
 end)
+
+-- Phase 3 (additive): a Site of Grace can request a full stamina refill on rest.
+-- This does NOT change the drain/regen/attack rules above — it only sets stamina to
+-- max and syncs, exactly as regen does when it reaches the cap. Guarded so the
+-- headless combat test harness (which has no ServerStorage) still loads this script.
+local ServerStorage = game:GetService("ServerStorage")
+if ServerStorage then
+	local RefillStamina = ServerStorage:WaitForChild("Bindables"):WaitForChild("RefillStamina")
+	RefillStamina.Event:Connect(function(player)
+		local data = playerData[player]
+		if data then
+			data.stamina = Config.MAX_STAMINA
+			syncStamina(player)
+		end
+	end)
+end
