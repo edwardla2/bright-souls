@@ -84,12 +84,12 @@ Legend:
 - [x] Ember Flask healing: limited charges, slow drink animation, heals a chunk of HP
 - [x] Flask drinking leaves you vulnerable (no i-frames) — interrupt-on-damage deferred this version
 - [x] Respawn on death now sends player to last-rested Grace
-- (STUDIO) Place a Grace part in the workspace, tag it "Grace", give it a glow
-- (TEST) Interacting with a Grace heals you and refills flasks
-- (TEST) Resting respawns dead enemies
-- (TEST) Drinking a flask heals but locks you in a vulnerable animation
-- (TEST) Dying returns you to the last Grace you rested at
-- [ ] `git commit -m "Phase 3: sites of grace + ember flask healing"`
+- [x] (STUDIO) Place a Grace part in the workspace, tag it "Grace", give it a glow
+- [x] (TEST) Interacting with a Grace heals you and refills flasks
+- [x] (TEST) Resting respawns dead enemies
+- [x] (TEST) Drinking a flask heals but locks you in a vulnerable animation
+- [x] (TEST) Dying returns you to the last Grace you rested at
+- [x] `git commit -m "Phase 3: sites of grace + ember flask healing"`
 
 ---
 
