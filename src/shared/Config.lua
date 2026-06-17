@@ -43,4 +43,12 @@ return {
 	FLASK_HEAL_AMOUNT = 50, -- HP restored per drink (clamped to MaxHealth)
 	FLASK_DRINK_TIME = 1.1, -- seconds; slow on purpose — you're vulnerable while drinking
 	FLASK_KEY = Enum.KeyCode.R, -- key the client binds to drink
+
+	-- Stats + leveling (Phase 4)
+	BASE_STAT = 10, -- starting value for every stat (Vigor/Endurance/Strength/Dexterity)
+	BASE_HP = 100, -- max HP at base Vigor (matches the default Humanoid MaxHealth)
+	VIGOR_HP_PER_POINT = 20, -- max HP gained per Vigor point above base
+	ENDURANCE_STAMINA_PER_POINT = 10, -- max stamina gained per Endurance point above base
+	LEVEL_BASE_COST = 50, -- rune cost of the first level
+	LEVEL_COST_GROWTH = 1.1, -- each level costs this factor more than the last
 }

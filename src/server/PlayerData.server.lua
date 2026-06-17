@@ -18,20 +18,37 @@
 	    their total, and destroys any PREVIOUS bloodstain first (the die-twice rule).
 	  * Recovery: touching your OWN bloodstain returns its runes and removes it.
 
-	Additive: does not change the stamina system, dodge handler, enemy state
-	machine, or Config tuning. CombatServer's only change is the attacker tag above.
+	Phase 4 adds character stats (Vigor/Endurance/Strength/Dexterity) and leveling at a
+	Grace: spending runes raises a stat, with Vigor -> max HP (Humanoid.MaxHealth) and
+	Endurance -> max stamina (published as a "MaxStamina" player attribute CombatServer
+	reads). Strength/Dexterity are stored but weapon scaling is post-MVP, and equip
+	load is stubbed at 0 (roll-type-by-weight is post-MVP).
+
+	Additive: it does not rewrite the stamina/hitbox/dodge/enemy/Grace internals — it
+	extends them through attributes, bindables, and reads.
 ]]
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ServerStorage = game:GetService("ServerStorage")
+local CollectionService = game:GetService("CollectionService")
+
+local Config = require(ReplicatedStorage.Shared.Config)
 
 local Remotes = ReplicatedStorage:WaitForChild("Remotes")
 local RuneSync = Remotes:WaitForChild("RuneSync")
+local StatSync = Remotes:WaitForChild("StatSync")
+local LevelUpRequest = Remotes:WaitForChild("LevelUpRequest")
+
+local RefillStamina = ServerStorage:WaitForChild("Bindables"):WaitForChild("RefillStamina")
 
 local GOLD = Color3.fromRGB(212, 175, 55) -- the Ember/rune colour; matches the HUD
 
+local GRACE_TAG = "Grace"
+local LEVEL_RANGE = 16 -- studs; must be this close to a Grace to spend runes on a level
+
 -- Per-player state, keyed by the Player instance (so it survives respawns).
--- playerData[player] = { runes = number, bloodstain = Part? }
+-- playerData[player] = { runes, bloodstain, lastPos, stats = {...}, level }
 local playerData = {}
 
 ----------------------------------------------------------------------
@@ -54,6 +71,104 @@ local function awardRunes(player, amount)
 	data.runes = data.runes + amount
 	syncRunes(player)
 end
+
+----------------------------------------------------------------------
+-- Stats + leveling (Phase 4)
+----------------------------------------------------------------------
+-- Stats live alongside runes in playerData[player].stats. Vigor raises max HP and
+-- Endurance raises max stamina (CombatServer reads the per-player cap). Strength and
+-- Dexterity are stored and cost runes now, but weapon damage scaling is POST-MVP —
+-- wiring it into the hitbox would mean touching the damage core, which Phase 4 avoids.
+
+local function maxHpFor(player)
+	local data = playerData[player]
+	local vigor = (data and data.stats.Vigor) or Config.BASE_STAT
+	return Config.BASE_HP + (vigor - Config.BASE_STAT) * Config.VIGOR_HP_PER_POINT
+end
+
+local function maxStaminaValue(player)
+	local data = playerData[player]
+	local endurance = (data and data.stats.Endurance) or Config.BASE_STAT
+	return Config.MAX_STAMINA + (endurance - Config.BASE_STAT) * Config.ENDURANCE_STAMINA_PER_POINT
+end
+
+-- Rune cost of the player's NEXT level — scales with total points already spent.
+local function levelCost(player)
+	local data = playerData[player]
+	local level = (data and data.level) or 0
+	return math.floor(Config.LEVEL_BASE_COST * (Config.LEVEL_COST_GROWTH ^ level))
+end
+
+local function syncStats(player)
+	local data = playerData[player]
+	if not data then
+		return
+	end
+	StatSync:FireClient(player, data.stats, levelCost(player), data.runes)
+end
+
+-- Vigor -> Humanoid.MaxHealth. Sets the cap and heals to full (Souls level-up feel).
+local function applyMaxHP(player)
+	local character = player.Character
+	local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+	if not humanoid then
+		return
+	end
+	humanoid.MaxHealth = maxHpFor(player)
+	humanoid.Health = humanoid.MaxHealth
+end
+
+-- Endurance -> max stamina, published as a player attribute CombatServer reads.
+local function applyMaxStamina(player)
+	player:SetAttribute("MaxStamina", maxStaminaValue(player))
+end
+
+-- Is the player standing at a Site of Grace? Leveling is only allowed there.
+local function nearGrace(player)
+	local character = player.Character
+	local root = character and character:FindFirstChild("HumanoidRootPart")
+	if not root then
+		return false
+	end
+	for _, grace in ipairs(CollectionService:GetTagged(GRACE_TAG)) do
+		local part = grace:IsA("BasePart") and grace or grace:FindFirstChildWhichIsA("BasePart")
+		if part and (part.Position - root.Position).Magnitude <= LEVEL_RANGE then
+			return true
+		end
+	end
+	return false
+end
+
+LevelUpRequest.OnServerEvent:Connect(function(player, statName)
+	local data = playerData[player]
+	if not data then
+		return
+	end
+	-- Validate the stat, the location, and affordability — never trust the client.
+	if type(statName) ~= "string" or data.stats[statName] == nil then
+		return
+	end
+	if not nearGrace(player) then
+		return
+	end
+	local cost = levelCost(player)
+	if data.runes < cost then
+		return
+	end
+
+	-- Spend + raise.
+	data.runes = data.runes - cost
+	data.stats[statName] = data.stats[statName] + 1
+	data.level = data.level + 1
+
+	-- Apply effects: stamina cap (+ refill to it), HP cap (+ heal to full).
+	applyMaxStamina(player)
+	RefillStamina:Fire(player)
+	applyMaxHP(player)
+
+	syncRunes(player)
+	syncStats(player)
+end)
 
 ----------------------------------------------------------------------
 -- Awarding runes on a kill
@@ -201,6 +316,11 @@ end
 
 local function onCharacterAdded(player, character)
 	local humanoid = character:WaitForChild("Humanoid")
+	-- Apply Vigor -> MaxHealth on every (re)spawn so the body has the right HP cap.
+	applyMaxHP(player)
+	-- Re-send stats now the character (and the client UI) is up, so the level menu
+	-- always has current values regardless of join-time remote races.
+	syncStats(player)
 	-- Re-bound every respawn so death is always detected; rune state itself lives
 	-- in playerData (keyed by Player) and is untouched by the respawn.
 	humanoid.Died:Connect(function()
@@ -213,9 +333,22 @@ local function onPlayerAdded(player)
 	-- runes already earned. The table is keyed by Player so it survives respawns
 	-- (respawns go through onCharacterAdded, which never touches this table).
 	if not playerData[player] then
-		playerData[player] = { runes = 0, bloodstain = nil, lastPos = nil }
+		playerData[player] = {
+			runes = 0,
+			bloodstain = nil,
+			lastPos = nil,
+			stats = {
+				Vigor = Config.BASE_STAT,
+				Endurance = Config.BASE_STAT,
+				Strength = Config.BASE_STAT,
+				Dexterity = Config.BASE_STAT,
+			},
+			level = 0, -- total stat points spent above base; drives the rune cost curve
+		}
 	end
+	applyMaxStamina(player) -- publish the (base) stamina cap for CombatServer to read
 	syncRunes(player)
+	syncStats(player)
 
 	if player.Character then
 		onCharacterAdded(player, player.Character)

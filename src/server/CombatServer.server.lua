@@ -29,6 +29,14 @@ local StaminaSync = Remotes:WaitForChild("StaminaSync")
 -- { stamina = number, lastUseTime = number (os.clock), iframes = boolean }
 local playerData = {}
 
+-- Per-player stamina cap. Defaults to Config.MAX_STAMINA; PlayerData publishes a
+-- higher value via the "MaxStamina" attribute when a player levels Endurance. This
+-- is the one concession the stamina system makes to leveling — drain/regen/throttle
+-- are otherwise unchanged, and at base Endurance this returns exactly the Config cap.
+local function maxStaminaFor(player)
+	return player:GetAttribute("MaxStamina") or Config.MAX_STAMINA
+end
+
 -- Push the current stamina value down to a player's HUD.
 local function syncStamina(player)
 	local data = playerData[player]
@@ -42,7 +50,7 @@ local function syncStamina(player)
 		return
 	end
 	data.lastSentStamina = floored
-	StaminaSync:FireClient(player, data.stamina, Config.MAX_STAMINA)
+	StaminaSync:FireClient(player, data.stamina, maxStaminaFor(player))
 end
 
 -- Try to spend `amount` stamina. Returns true on success (and starts the regen
@@ -63,7 +71,7 @@ end
 
 Players.PlayerAdded:Connect(function(player)
 	playerData[player] = {
-		stamina = Config.MAX_STAMINA,
+		stamina = maxStaminaFor(player),
 		lastUseTime = 0,
 		iframes = false,
 		lastSentStamina = -1,
@@ -79,9 +87,10 @@ end)
 -- elapsed since the player's last spend, and syncs the client on every change.
 RunService.Heartbeat:Connect(function(dt)
 	for player, data in pairs(playerData) do
-		if data.stamina < Config.MAX_STAMINA then
+		local maxStamina = maxStaminaFor(player)
+		if data.stamina < maxStamina then
 			if os.clock() - data.lastUseTime >= Config.REGEN_DELAY then
-				data.stamina = math.min(Config.MAX_STAMINA, data.stamina + Config.REGEN_RATE * dt)
+				data.stamina = math.min(maxStamina, data.stamina + Config.REGEN_RATE * dt)
 				syncStamina(player)
 			end
 		end
@@ -208,7 +217,7 @@ if ServerStorage then
 	RefillStamina.Event:Connect(function(player)
 		local data = playerData[player]
 		if data then
-			data.stamina = Config.MAX_STAMINA
+			data.stamina = maxStaminaFor(player)
 			syncStamina(player)
 		end
 	end)

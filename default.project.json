@@ -26,7 +26,10 @@
         "RuneSync": { "$className": "RemoteEvent" },
         "GraceRested": { "$className": "RemoteEvent" },
         "FlaskDrink": { "$className": "RemoteEvent" },
-        "FlaskSync": { "$className": "RemoteEvent" }
+        "FlaskSync": { "$className": "RemoteEvent" },
+        "LevelUpRequest": { "$className": "RemoteEvent" },
+        "StatSync": { "$className": "RemoteEvent" },
+        "OpenLevelMenu": { "$className": "RemoteEvent" }
       }
     },
 

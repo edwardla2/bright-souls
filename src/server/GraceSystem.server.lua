@@ -27,6 +27,7 @@ local Config = require(ReplicatedStorage.Shared.Config) -- kept for convention /
 
 local Remotes = ReplicatedStorage:WaitForChild("Remotes")
 local GraceRested = Remotes:WaitForChild("GraceRested")
+local OpenLevelMenu = Remotes:WaitForChild("OpenLevelMenu")
 
 local Bindables = ServerStorage:WaitForChild("Bindables")
 local RefillStamina = Bindables:WaitForChild("RefillStamina")
@@ -141,6 +142,24 @@ local function setupGrace(graceInstance)
 
 	prompt.Triggered:Connect(function(player)
 		onRest(player, part)
+	end)
+
+	-- A second prompt opens the level-up menu. PlayerData owns the actual leveling
+	-- (it validates the player is at a Grace + can afford the cost); we just signal
+	-- the client to open the menu. Different key so it doesn't clash with "Rest".
+	local levelPrompt = Instance.new("ProximityPrompt")
+	levelPrompt.Name = "LevelPrompt"
+	levelPrompt.ActionText = "Level Up"
+	levelPrompt.ObjectText = "Site of Grace"
+	levelPrompt.KeyboardKeyCode = Enum.KeyCode.F
+	levelPrompt.GamepadKeyCode = Enum.KeyCode.ButtonY
+	levelPrompt.HoldDuration = 0
+	levelPrompt.MaxActivationDistance = 12
+	levelPrompt.RequiresLineOfSight = false
+	levelPrompt.Parent = part
+
+	levelPrompt.Triggered:Connect(function(player)
+		OpenLevelMenu:FireClient(player)
 	end)
 end
 

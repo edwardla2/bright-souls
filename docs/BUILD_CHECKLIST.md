@@ -97,18 +97,17 @@ Legend:
 
 **Goal:** Spend runes at a Grace to permanently raise stats.
 
-- [ ] Add stats to PlayerData: Vigor, Endurance, Strength, Dexterity (start at base)
-- [ ] Vigor → max HP, Endurance → max stamina (wire into existing stamina/HP systems)
-- [ ] Rune cost formula (each level costs more than the last)
-- [ ] Create `src/client/LevelUpUI.client.lua` — level-up menu opened from a Grace
-- [ ] Spend runes to +1 a stat; deduct runes, apply stat effect, close menu
-- [ ] Equip load groundwork: roll type (light/medium/heavy) based on Endurance (stub
-      armor weight as 0 for now — full equipment is post-MVP)
-- (STUDIO) Add a "Level Up" option to the Grace ProximityPrompt menu
-- (TEST) Leveling Vigor raises and refills your max HP
-- (TEST) Leveling Endurance raises your max stamina
-- (TEST) Rune cost increases each level; can't level without enough runes
-- [ ] `git commit -m "Phase 4: stats + leveling at grace"`
+- [x] Add stats to PlayerData: Vigor, Endurance, Strength, Dexterity (start at base)
+- [x] Vigor → max HP, Endurance → max stamina (wire into existing stamina/HP systems)
+- [x] Rune cost formula (each level costs more than the last)
+- [x] Create `src/client/LevelUpUI.client.lua` — level-up menu opened from a Grace
+- [x] Spend runes to +1 a stat; deduct runes, apply stat effect (menu stays open, closes on walk-away/X)
+- [x] Equip load stubbed at 0 — roll-type-by-weight deferred post-MVP (would touch the dodge handler)
+- [x] (STUDIO) Add a "Level Up" option to the Grace ProximityPrompt menu (done in code — second prompt, key F)
+- [x] (TEST) Leveling Vigor raises and refills your max HP
+- [x] (TEST) Leveling Endurance raises your max stamina
+- [x] (TEST) Rune cost increases each level; can't level without enough runes
+- [x] `git commit -m "Phase 4: stats + leveling at grace"`
 
 ---
 
