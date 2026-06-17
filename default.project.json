@@ -22,7 +22,8 @@
         "$className": "Folder",
         "AttackEvent": { "$className": "RemoteEvent" },
         "DodgeEvent": { "$className": "RemoteEvent" },
-        "StaminaSync": { "$className": "RemoteEvent" }
+        "StaminaSync": { "$className": "RemoteEvent" },
+        "RuneSync": { "$className": "RemoteEvent" }
       }
     }
   }

@@ -54,20 +54,20 @@ Legend:
 
 **Goal:** The core Souls tension — earn runes, lose them on death, recover them once.
 
-- [ ] Create `src/server/PlayerData.server.lua` — per-player runes, HP tracking
-- [ ] Award runes on enemy death (read the enemy's Runes attribute, add to killer)
-- [ ] Create `src/client/RuneUI.client.lua` — rune counter on screen
-- [ ] StaminaSync-style remote to sync rune count to client
-- [ ] On player death: spawn a "bloodstain" part at death location holding the runes
-- [ ] Player drops ALL runes into the bloodstain on death
-- [ ] Touching the bloodstain returns the runes (and removes it)
-- [ ] If player dies again before recovering: delete the old bloodstain (runes lost)
-- [ ] Respawn handling (player returns to a spawn point — temp spawn for now)
+- [x] Create `src/server/PlayerData.server.lua` — per-player runes, HP tracking
+- [x] Award runes on enemy death (read the enemy's Runes attribute, add to killer)
+- [x] Create `src/client/RuneUI.client.lua` — rune counter on screen
+- [x] StaminaSync-style remote to sync rune count to client
+- [x] On player death: spawn a "bloodstain" part at death location holding the runes
+- [x] Player drops ALL runes into the bloodstain on death
+- [x] Touching the bloodstain returns the runes (and removes it)
+- [x] If player dies again before recovering: delete the old bloodstain (runes lost)
+- [x] Respawn handling (player returns to a spawn point — temp spawn for now)
 - (TEST) Killing an enemy increases your rune count on screen
 - (TEST) Dying drops a bloodstain with your runes; counter resets to 0
 - (TEST) Walking back to the bloodstain restores the runes
 - (TEST) Dying twice in a row permanently loses the first bloodstain
-- [ ] `git commit -m "Phase 2: rune economy + death/recovery loop"`
+- [x] `git commit -m "Phase 2: rune economy + death/recovery loop"`
 
 ---
 

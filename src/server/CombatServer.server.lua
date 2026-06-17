@@ -135,6 +135,18 @@ AttackEvent.OnServerEvent:Connect(function(player)
 			local targetPlayer = Players:GetPlayerFromCharacter(model)
 			local targetData = targetPlayer and playerData[targetPlayer]
 			if not (targetData and targetData.iframes) then
+				-- Phase 2: record who dealt the blow BEFORE damage lands, so if this
+				-- is the killing hit the enemy's death (which drops its Runes) is
+				-- attributed to the right player. PlayerData reads this LastAttacker
+				-- to award runes. Lives on the enemy until it despawns (short-lived).
+				local lastAttacker = model:FindFirstChild("LastAttacker")
+				if not lastAttacker then
+					lastAttacker = Instance.new("ObjectValue")
+					lastAttacker.Name = "LastAttacker"
+					lastAttacker.Parent = model
+				end
+				lastAttacker.Value = player
+
 				humanoid:TakeDamage(Config.ATTACK_DAMAGE)
 			end
 		end

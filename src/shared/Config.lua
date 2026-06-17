@@ -11,8 +11,8 @@
 return {
 	-- Stamina economy
 	MAX_STAMINA = 100, -- ceiling each player regenerates toward
-	REGEN_RATE = 20, -- stamina restored per second once regen resumes
-	REGEN_DELAY = 1.2, -- seconds of "no spending" required before regen kicks in
+	REGEN_RATE = 35, -- stamina restored per second once regen resumes
+	REGEN_DELAY = 1.0, -- seconds of "no spending" required before regen kicks in
 	ATTACK_COST = 20, -- stamina spent per swing
 	DODGE_COST = 30, -- stamina spent per dodge roll
 
