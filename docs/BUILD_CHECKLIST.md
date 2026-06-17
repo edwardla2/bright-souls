@@ -63,10 +63,10 @@ Legend:
 - [x] Touching the bloodstain returns the runes (and removes it)
 - [x] If player dies again before recovering: delete the old bloodstain (runes lost)
 - [x] Respawn handling (player returns to a spawn point — temp spawn for now)
-- (TEST) Killing an enemy increases your rune count on screen
-- (TEST) Dying drops a bloodstain with your runes; counter resets to 0
-- (TEST) Walking back to the bloodstain restores the runes
-- (TEST) Dying twice in a row permanently loses the first bloodstain
+- [x] (TEST) Killing an enemy increases your rune count on screen
+- [x] (TEST) Dying drops a bloodstain with your runes; counter resets to 0
+- [x] (TEST) Walking back to the bloodstain restores the runes
+- [x] (TEST) Dying twice in a row permanently loses the first bloodstain
 - [x] `git commit -m "Phase 2: rune economy + death/recovery loop"`
 
 ---

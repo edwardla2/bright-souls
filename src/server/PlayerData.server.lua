@@ -114,7 +114,7 @@ local function spawnBloodstain(position, runes)
 	light.Range = 18
 	light.Parent = part
 
-	part.Parent = workspace
+	part.Parent = workspace -- parent LAST, once fully configured
 	return part
 end
 
@@ -132,11 +132,21 @@ local function bindRecovery(part, owner)
 		if toucher ~= owner then
 			return
 		end
+		-- Only a LIVING character can reclaim. The bloodstain spawns on the exact
+		-- spot the player died, so the owner's own CORPSE is touching it immediately —
+		-- without this guard that corpse "recovers" and destroys the marker the same
+		-- frame it appears (and hands the runes back). A respawned, living body
+		-- walking back is what should reclaim it.
+		local humanoid = character:FindFirstChildOfClass("Humanoid")
+		if not humanoid or humanoid.Health <= 0 then
+			return
+		end
 
 		local reward = part:GetAttribute("Runes") or 0
 		data.bloodstain = nil
 		part:Destroy()
-		awardRunes(owner, reward) -- fires RuneSync with the restored total
+		awardRunes(owner, reward) -- restores the dropped runes to the player (fires RuneSync)
+		print(owner.Name .. " recovered " .. reward .. " runes")
 	end)
 end
 
@@ -146,24 +156,41 @@ local function onDeath(player, character)
 		return
 	end
 
-	local root = character:FindFirstChild("HumanoidRootPart")
-	local position = root and root.Position or character:GetPivot().Position
-
-	-- Die-twice rule: any existing bloodstain (and its runes) is lost forever.
-	if data.bloodstain then
-		data.bloodstain:Destroy()
-		data.bloodstain = nil
+	-- Use the position we tracked while the player was ALIVE. Reading the
+	-- HumanoidRootPart here (inside Died) is unreliable — the character is being
+	-- torn down, so the part may be gone or report a stale/origin position. Fall
+	-- back to the live HRP only if we somehow never captured a position.
+	local position = data.lastPos
+	if not position then
+		local root = character:FindFirstChild("HumanoidRootPart")
+		position = root and root.Position or nil
 	end
 
-	-- Drop everything carried. Only bother spawning a marker if there's something
-	-- in it to recover.
+	-- Capture how many runes to drop FIRST, before anything can reset the total.
+	-- The 0-runes rule below checks THIS captured amount (what the player had on
+	-- death), never the post-reset count.
 	local dropped = data.runes
-	if dropped > 0 then
+
+	-- Die-twice rule: any PREVIOUS bloodstain (and its runes) is lost forever.
+	-- Capture the OLD reference into a local and clear the field BEFORE we create the
+	-- new marker, so this destroy can never touch the bloodstain we're about to spawn.
+	local oldBloodstain = data.bloodstain
+	data.bloodstain = nil
+	if oldBloodstain then
+		oldBloodstain:Destroy()
+	end
+
+	-- Drop the captured runes — only if there's something to recover AND a genuine
+	-- position to place the marker. Dying with 0 runes intentionally drops nothing.
+	if dropped > 0 and position then
 		local part = spawnBloodstain(position, dropped)
 		data.bloodstain = part
 		bindRecovery(part, player)
+	elseif dropped > 0 then
+		warn("No valid death position for " .. player.Name .. " — bloodstain skipped, runes lost")
 	end
 
+	-- Only now, after the drop is placed, clear the carried total and sync the HUD.
 	data.runes = 0
 	syncRunes(player)
 end
@@ -182,7 +209,12 @@ local function onCharacterAdded(player, character)
 end
 
 local function onPlayerAdded(player)
-	playerData[player] = { runes = 0, bloodstain = nil }
+	-- Initialise ONCE per player. Never recreate an existing entry — that would wipe
+	-- runes already earned. The table is keyed by Player so it survives respawns
+	-- (respawns go through onCharacterAdded, which never touches this table).
+	if not playerData[player] then
+		playerData[player] = { runes = 0, bloodstain = nil, lastPos = nil }
+	end
 	syncRunes(player)
 
 	if player.Character then
@@ -204,6 +236,25 @@ Players.PlayerRemoving:Connect(function(player)
 		data.bloodstain:Destroy()
 	end
 	playerData[player] = nil
+end)
+
+-- Continuously remember each LIVING player's position (~4x/sec) so death always has
+-- a reliable spot for the bloodstain. This sidesteps the cleanup race: the
+-- HumanoidRootPart is unreliable by the time Humanoid.Died fires, so we never read
+-- it then — we use this last-known-good position instead. The loop body never
+-- yields, so it can't collide with PlayerRemoving mutating playerData.
+task.spawn(function()
+	while true do
+		for player, data in pairs(playerData) do
+			local character = player.Character
+			local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+			local root = character and character:FindFirstChild("HumanoidRootPart")
+			if humanoid and root and humanoid.Health > 0 then
+				data.lastPos = root.Position
+			end
+		end
+		task.wait(0.25)
+	end
 end)
 
 --[[
