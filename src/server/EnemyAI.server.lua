@@ -62,6 +62,79 @@ local function getNearestPlayer(originPos)
 	return nearestChar, nearestDist
 end
 
+-- WINDUP telegraph styling. Three stacked cues — neon red, a throbbing pulse, and
+-- a slight scale-up — make the wind-up unmistakable against the cold palette.
+local TELEGRAPH_BRIGHT = Color3.fromRGB(255, 30, 30) -- peak of the throb
+local TELEGRAPH_DARK = Color3.fromRGB(90, 10, 10) -- trough of the throb
+local TELEGRAPH_SCALE = 1.15 -- "charging up" enlarge factor
+
+-- Begin the telegraph: glow neon red, scale up, and kick off a concurrent pulse.
+-- Each enemy stores its own originals (Color AND Material) and base scale in `data`,
+-- so restores are exact and enemies never clobber each other.
+local function startTelegraph(model, data)
+	local originals = {}
+	for _, part in ipairs(model:GetDescendants()) do
+		if part:IsA("BasePart") then
+			originals[part] = { color = part.Color, material = part.Material }
+			part.Color = TELEGRAPH_BRIGHT
+			part.Material = Enum.Material.Neon
+		end
+	end
+	data.telegraphOriginals = originals
+
+	-- Scale up slightly as a "charging" cue (ScaleTo is exact and reversible).
+	if model.ScaleTo then
+		data.telegraphScale = model:GetScale()
+		model:ScaleTo(data.telegraphScale * TELEGRAPH_SCALE)
+	end
+
+	-- Concurrent pulse: throb the red between dark and bright. Runs ALONGSIDE the
+	-- authoritative windup wait (never touches its timing) and stops the instant the
+	-- flag clears, the enemy dies, or the model despawns — so nothing stays pulsing.
+	data.telegraphActive = true
+	task.spawn(function()
+		local omega = (2 * 2 * math.pi) / math.max(Config.ENEMY_WINDUP_TIME, 0.05) -- ~2 throbs/windup
+		local startClock = os.clock()
+		while data.telegraphActive and model.Parent do
+			local t = (math.sin((os.clock() - startClock) * omega) + 1) / 2
+			local color = TELEGRAPH_DARK:Lerp(TELEGRAPH_BRIGHT, t)
+			if not data.telegraphActive then
+				break -- told to stop while we were parked; don't re-tint
+			end
+			for part in pairs(originals) do
+				if part.Parent then
+					part.Color = color
+				end
+			end
+			task.wait(0.03)
+		end
+	end)
+end
+
+-- End the telegraph and restore everything exactly: stop the pulse, put back each
+-- part's Color + Material, and undo the scale. Safe on a dying/destroyed rig —
+-- parts/models that are gone (Parent == nil) are skipped, so it never errors.
+local function stopTelegraph(model, data)
+	-- Clear the flag FIRST so the pulse can't re-tint after we restore.
+	data.telegraphActive = false
+
+	local originals = data.telegraphOriginals
+	if originals then
+		data.telegraphOriginals = nil
+		for part, saved in pairs(originals) do
+			if part.Parent then
+				part.Color = saved.color
+				part.Material = saved.material
+			end
+		end
+	end
+
+	if data.telegraphScale and model.ScaleTo and model.Parent then
+		model:ScaleTo(data.telegraphScale)
+	end
+	data.telegraphScale = nil
+end
+
 -- WINDUP: telegraph then (maybe) connect. Runs inline inside the enemy's loop, so
 -- the task.wait below only parks THIS enemy. Returns the enemy to CHASE afterward.
 local function performWindup(model, data, humanoid, root)
@@ -76,10 +149,12 @@ local function performWindup(model, data, humanoid, root)
 	end
 
 	model:SetAttribute("Telegraphing", true)
+	startTelegraph(model, data)
 	task.wait(Config.ENEMY_WINDUP_TIME)
 
 	-- The enemy may have died / despawned during the wind-up.
 	if not enemies[model] or humanoid.Health <= 0 then
+		stopTelegraph(model, data) -- clear all cues on the dying enemy (guarded against destroyed rig)
 		return
 	end
 
@@ -94,6 +169,7 @@ local function performWindup(model, data, humanoid, root)
 		end
 	end
 
+	stopTelegraph(model, data)
 	model:SetAttribute("Telegraphing", false)
 	data.lastAttack = os.clock()
 	if data.state ~= "DEAD" then
