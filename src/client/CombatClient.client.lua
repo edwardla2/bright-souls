@@ -29,6 +29,34 @@ local StaminaSync = Remotes:WaitForChild("StaminaSync")
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
+----------------------------------------------------------------------
+-- Attack animation
+----------------------------------------------------------------------
+-- The slash track is loaded onto the character's Animator. Because the
+-- Animator (and the whole character) is rebuilt every time the player
+-- respawns, we re-load the track on each CharacterAdded. `attackTrack` is
+-- nil until a character exists, so the input handler guards on it.
+
+local attackTrack -- AnimationTrack for the light attack swing (per-character)
+
+local function setupCharacterAnimation(character)
+	local humanoid = character:WaitForChild("Humanoid")
+	local animator = humanoid:WaitForChild("Animator")
+
+	local attackAnim = Instance.new("Animation")
+	attackAnim.AnimationId = Config.ATTACK_ANIM_ID
+
+	attackTrack = animator:LoadAnimation(attackAnim)
+	attackTrack.Priority = Enum.AnimationPriority.Action
+end
+
+-- Run for the character we already have (script may load after spawn), and
+-- again on every future respawn.
+if player.Character then
+	setupCharacterAnimation(player.Character)
+end
+player.CharacterAdded:Connect(setupCharacterAnimation)
+
 local GOLD = Color3.fromRGB(212, 175, 55)
 local RED = Color3.fromRGB(200, 50, 45)
 local LOW_THRESHOLD = 0.3 -- fraction of max below which the bar reads "red"
@@ -123,6 +151,11 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
 		if currentStamina >= Config.ATTACK_COST then
 			busy = true
 			AttackEvent:FireServer()
+			-- Play the swing locally; speed it up so it fits the 0.55s lock.
+			if attackTrack then
+				attackTrack:Play()
+				attackTrack:AdjustSpeed(1.2)
+			end
 			task.delay(0.55, function()
 				busy = false
 			end)
