@@ -115,15 +115,15 @@ Legend:
 
 **Goal:** A real boss fight — fog gate, health bar, telegraphs, punish windows, a phase.
 
-- [ ] Create `src/server/BossAI.server.lua` (extends the enemy state machine)
-- [ ] Boss config: high HP, multiple attacks, telegraph times, punish windows
-- [ ] Multiple attack patterns (e.g. overhead slam, horizontal sweep, lunge) chosen
+- [x] Create `src/server/BossAI.server.lua` (own system, reuses enemy patterns)
+- [x] Boss config: high HP, multiple attacks, telegraph times, punish windows
+- [x] Multiple attack patterns (overhead / sweep / lunge) chosen
       semi-randomly, each with its own telegraph + recovery
-- [ ] Phase transition at 50% HP — gains a new move / faster recovery
-- [ ] Create `src/client/BossUI.client.lua` — boss name + health bar on engage
-- [ ] Fog gate: a wall part that the player walks through to start the fight; seals
-      behind them (removed on boss death or player death)
-- [ ] Big rune reward on boss death + remove fog gate permanently
+- [x] Phase transition at 50% HP — invuln roar then shorter recovery + cooldown
+- [x] Create `src/client/BossUI.client.lua` — boss name + health bar on engage
+- [x] Fog gate (folded into BossAI): walk through to start; seals (CanCollide)
+      behind you, unseals on boss death or player death
+- [x] Big rune reward on boss death (reuses Phase 2 LastAttacker path) + gate stays open
 - (STUDIO) Build/place the boss rig (a larger dummy for now), tag appropriately
 - (STUDIO) Place the fog gate part + a Grace just outside it (fast retry loop)
 - (TEST) Walking through the fog gate starts the fight + shows the boss bar
@@ -132,7 +132,7 @@ Legend:
 - (TEST) Boss changes behavior at 50% HP
 - (TEST) Death-to-retry is fast (Grace right outside the fog)
 - (TEST) Killing the boss grants runes + opens the gate
-- [ ] `git commit -m "Phase 5: first boss - tide-drowned knight"`
+- [x] `git commit -m "Phase 5: first boss - tide-drowned knight"`
 
 ---
 

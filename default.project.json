@@ -29,7 +29,8 @@
         "FlaskSync": { "$className": "RemoteEvent" },
         "LevelUpRequest": { "$className": "RemoteEvent" },
         "StatSync": { "$className": "RemoteEvent" },
-        "OpenLevelMenu": { "$className": "RemoteEvent" }
+        "OpenLevelMenu": { "$className": "RemoteEvent" },
+        "BossSync": { "$className": "RemoteEvent" }
       }
     },
 

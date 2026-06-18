@@ -51,4 +51,23 @@ return {
 	ENDURANCE_STAMINA_PER_POINT = 10, -- max stamina gained per Endurance point above base
 	LEVEL_BASE_COST = 50, -- rune cost of the first level
 	LEVEL_COST_GROWTH = 1.1, -- each level costs this factor more than the last
+
+	-- Boss: The Tide-Drowned Knight (Phase 5)
+	BOSS_HP = 600,
+	BOSS_WALK_SPEED = 10,
+	BOSS_CHASE_SPEED = 16,
+	BOSS_AGGRO_RANGE = 80,
+	BOSS_ATTACK_RANGE = 9, -- close-attack range; Lunge reaches further (see BOSS_ATTACKS)
+	BOSS_ATTACK_COOLDOWN = 1.2, -- base seconds between boss attacks
+	BOSS_RUNE_REWARD = 1000,
+	BOSS_PHASE2_THRESHOLD = 0.5, -- fraction of HP that triggers phase 2
+	BOSS_PHASE2_RECOVERY_FACTOR = 0.6, -- phase 2 shortens recovery + cooldown (smaller punish window)
+
+	-- Three attack patterns. Each: telegraph (windup), damage, reach (range),
+	-- recovery (the vulnerable punish window), and the swing's hitbox volume.
+	BOSS_ATTACKS = {
+		Overhead = { windup = 0.8, damage = 40, range = 9, recovery = 1.0, hitboxSize = Vector3.new(8, 6, 8) },
+		Sweep = { windup = 0.7, damage = 30, range = 11, recovery = 0.9, hitboxSize = Vector3.new(14, 5, 8) },
+		Lunge = { windup = 0.9, damage = 50, range = 18, recovery = 1.2, hitboxSize = Vector3.new(6, 5, 14) },
+	},
 }

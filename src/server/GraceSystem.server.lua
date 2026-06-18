@@ -54,6 +54,9 @@ local function snapshotEnemy(model)
 	if not model:IsA("Model") then
 		return
 	end
+	if CollectionService:HasTag(model, "Boss") then
+		return -- bosses stay dead; never snapshot/respawn them on rest (Phase 5)
+	end
 	if not (model:FindFirstChildOfClass("Humanoid") and model:FindFirstChild("HumanoidRootPart")) then
 		return
 	end
