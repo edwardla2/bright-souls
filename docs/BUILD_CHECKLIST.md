@@ -136,6 +136,24 @@ Legend:
 
 ---
 
+## PHASE 5.5 — Game Feel (juice)
+
+**Goal:** Layer impact feedback onto the working combat — additive only.
+
+- [x] Hitstop on connecting player hits (anchor the hit entity ~0.1s)
+- [x] Hit feedback: impact sound + white Highlight flash (no telegraph-tint clobber) + spark
+- [x] Camera shake via ShakeCamera + CameraShake.client (deal / take / heavy / roar)
+- [x] Louder telegraph: stronger pulse (more cycles) + windup "tell" sound
+- [x] Player attack swing animation (already present from Phase 0)
+- [~] Movement weight: intentionally skipped (responsiveness > realism; Config note) + rig windup anim deferred
+- (NOTE) HIT_SOUND_ID / TELEGRAPH_SOUND_ID in Config are PLACEHOLDERS — verify/replace
+- (TEST) Hits feel like they connect (freeze + sound + flash + spark + small shake)
+- (TEST) Telegraph reads louder; a well-timed dodge still takes no damage
+- (TEST) Shake scales: small on deal, bigger on take, strong on boss roar/heavy
+- [x] `git commit -m "Phase 5.5: game feel (juice) pass"`
+
+---
+
 ## PHASE 6 — Build Area 1: The Ashen Shore (MVP DONE LINE)
 
 **Goal:** Assemble everything into the first playable slice.

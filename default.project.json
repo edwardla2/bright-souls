@@ -30,7 +30,8 @@
         "LevelUpRequest": { "$className": "RemoteEvent" },
         "StatSync": { "$className": "RemoteEvent" },
         "OpenLevelMenu": { "$className": "RemoteEvent" },
-        "BossSync": { "$className": "RemoteEvent" }
+        "BossSync": { "$className": "RemoteEvent" },
+        "ShakeCamera": { "$className": "RemoteEvent" }
       }
     },
 
@@ -39,7 +40,8 @@
       "Bindables": {
         "$className": "Folder",
         "RefillStamina": { "$className": "BindableEvent" },
-        "RefillFlasks": { "$className": "BindableEvent" }
+        "RefillFlasks": { "$className": "BindableEvent" },
+        "HitLanded": { "$className": "BindableEvent" }
       }
     }
   }

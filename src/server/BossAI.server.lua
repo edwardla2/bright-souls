@@ -30,11 +30,13 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local CollectionService = game:GetService("CollectionService")
+local Debris = game:GetService("Debris")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 
 local Remotes = ReplicatedStorage:WaitForChild("Remotes")
 local BossSync = Remotes:WaitForChild("BossSync")
+local ShakeCamera = Remotes:WaitForChild("ShakeCamera")
 
 local BOSS_TAG = "Boss"
 local FOGGATE_TAG = "FogGate"
@@ -126,6 +128,21 @@ local function hideBossBar()
 	BossSync:FireAllClients(false)
 end
 
+-- Phase 5.5 (juice): the windup "tell" sound on the boss rig at telegraph start.
+local function playTelegraphSound(model)
+	local root = model:FindFirstChild("HumanoidRootPart")
+	if not root then
+		return
+	end
+	local sound = Instance.new("Sound")
+	sound.SoundId = Config.TELEGRAPH_SOUND_ID
+	sound.Volume = Config.TELEGRAPH_SOUND_VOLUME
+	sound.RollOffMaxDistance = 120
+	sound.Parent = root
+	sound:Play()
+	Debris:AddItem(sound, 3)
+end
+
 ----------------------------------------------------------------------
 -- Attacks
 ----------------------------------------------------------------------
@@ -163,7 +180,8 @@ end
 -- One full attack: WINDUP (telegraph) -> HIT -> RECOVERY (punish window). Runs inline
 -- in the boss loop so the waits only park THIS boss.
 local function performAttack(boss, targetChar, dist)
-	local atk = Config.BOSS_ATTACKS[chooseAttack(dist)]
+	local attackName = chooseAttack(dist)
+	local atk = Config.BOSS_ATTACKS[attackName]
 
 	boss.state = "WINDUP"
 	boss.humanoid:MoveTo(boss.root.Position) -- plant feet
@@ -174,6 +192,7 @@ local function performAttack(boss, targetChar, dist)
 
 	boss.model:SetAttribute("Telegraphing", true)
 	startTelegraph(boss)
+	playTelegraphSound(boss.model)
 	task.wait(atk.windup)
 
 	-- Boss may have died during the wind-up.
@@ -186,6 +205,11 @@ local function performAttack(boss, targetChar, dist)
 	stopTelegraph(boss)
 	boss.model:SetAttribute("Telegraphing", false)
 	doHit(boss, atk)
+
+	-- Phase 5.5 (juice): heavy swings shake the screen for impact weight.
+	if attackName == "Overhead" or attackName == "Lunge" then
+		ShakeCamera:FireAllClients(Config.SHAKE_HEAVY.intensity, Config.SHAKE_HEAVY.duration)
+	end
 
 	-- RECOVERY: the boss does nothing — the player's window to punish. Phase 2
 	-- shrinks it (and the cooldown) for a clear, single escalation.
@@ -204,6 +228,7 @@ end
 local function triggerPhase2(boss)
 	boss.state = "PHASE2_ROAR"
 	boss.humanoid:MoveTo(boss.root.Position)
+	ShakeCamera:FireAllClients(Config.SHAKE_ROAR.intensity, Config.SHAKE_ROAR.duration) -- juice
 
 	-- Invulnerable for the roar: restore any HP drop so hits during it do nothing.
 	-- (Reaches no further than this Humanoid — no CombatServer changes.)

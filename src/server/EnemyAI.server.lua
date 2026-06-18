@@ -30,6 +30,7 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local CollectionService = game:GetService("CollectionService")
+local Debris = game:GetService("Debris")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 
@@ -93,7 +94,8 @@ local function startTelegraph(model, data)
 	-- flag clears, the enemy dies, or the model despawns — so nothing stays pulsing.
 	data.telegraphActive = true
 	task.spawn(function()
-		local omega = (2 * 2 * math.pi) / math.max(Config.ENEMY_WINDUP_TIME, 0.05) -- ~2 throbs/windup
+		local cycles = Config.TELEGRAPH_PULSE_CYCLES or 2
+		local omega = (cycles * 2 * math.pi) / math.max(Config.ENEMY_WINDUP_TIME, 0.05) -- throbs/windup (louder = more)
 		local startClock = os.clock()
 		while data.telegraphActive and model.Parent do
 			local t = (math.sin((os.clock() - startClock) * omega) + 1) / 2
@@ -135,6 +137,21 @@ local function stopTelegraph(model, data)
 	data.telegraphScale = nil
 end
 
+-- Phase 5.5 (juice): play the windup "tell" sound on the rig at telegraph start.
+local function playTelegraphSound(rig)
+	local rigRoot = rig:FindFirstChild("HumanoidRootPart")
+	if not rigRoot then
+		return
+	end
+	local sound = Instance.new("Sound")
+	sound.SoundId = Config.TELEGRAPH_SOUND_ID
+	sound.Volume = Config.TELEGRAPH_SOUND_VOLUME
+	sound.RollOffMaxDistance = 90
+	sound.Parent = rigRoot
+	sound:Play()
+	Debris:AddItem(sound, 3)
+end
+
 -- WINDUP: telegraph then (maybe) connect. Runs inline inside the enemy's loop, so
 -- the task.wait below only parks THIS enemy. Returns the enemy to CHASE afterward.
 local function performWindup(model, data, humanoid, root)
@@ -150,6 +167,7 @@ local function performWindup(model, data, humanoid, root)
 
 	model:SetAttribute("Telegraphing", true)
 	startTelegraph(model, data)
+	playTelegraphSound(model)
 	task.wait(Config.ENEMY_WINDUP_TIME)
 
 	-- The enemy may have died / despawned during the wind-up.

@@ -29,6 +29,11 @@ local StaminaSync = Remotes:WaitForChild("StaminaSync")
 -- { stamina = number, lastUseTime = number (os.clock), iframes = boolean }
 local playerData = {}
 
+-- Phase 5.5 (juice): bindable fired when a player attack connects, so JuiceServer can
+-- add hitstop/sound/flash/shake. Assigned below only if ServerStorage exists, so the
+-- headless combat test harness (which has none) leaves it nil and stays unaffected.
+local HitLanded = nil
+
 -- Per-player stamina cap. Defaults to Config.MAX_STAMINA; PlayerData publishes a
 -- higher value via the "MaxStamina" attribute when a player levels Endurance. This
 -- is the one concession the stamina system makes to leveling — drain/regen/throttle
@@ -157,6 +162,13 @@ AttackEvent.OnServerEvent:Connect(function(player)
 				lastAttacker.Value = player
 
 				humanoid:TakeDamage(Config.ATTACK_DAMAGE)
+
+				-- Phase 5.5 (juice): signal the connecting hit so JuiceServer can add
+				-- hitstop/sound/flash/spark/shake. Additive — does NOT change the damage
+				-- above. Guarded so the test harness (HitLanded == nil) is unaffected.
+				if HitLanded then
+					HitLanded:Fire(humanoid, part, player)
+				end
 			end
 		end
 	end
@@ -213,7 +225,9 @@ end)
 -- headless combat test harness (which has no ServerStorage) still loads this script.
 local ServerStorage = game:GetService("ServerStorage")
 if ServerStorage then
-	local RefillStamina = ServerStorage:WaitForChild("Bindables"):WaitForChild("RefillStamina")
+	local Bindables = ServerStorage:WaitForChild("Bindables")
+	HitLanded = Bindables:WaitForChild("HitLanded")
+	local RefillStamina = Bindables:WaitForChild("RefillStamina")
 	RefillStamina.Event:Connect(function(player)
 		local data = playerData[player]
 		if data then

@@ -70,4 +70,24 @@ return {
 		Sweep = { windup = 0.7, damage = 30, range = 11, recovery = 0.9, hitboxSize = Vector3.new(14, 5, 8) },
 		Lunge = { windup = 0.9, damage = 50, range = 18, recovery = 1.2, hitboxSize = Vector3.new(6, 5, 14) },
 	},
+
+	-- Game feel / juice (Phase 5.5) — all dial-by-feel; changes feedback, not mechanics.
+	HITSTOP_DURATION = 0.1, -- seconds the hit enemy/boss freezes (anchored) on a connecting hit
+	HIT_SOUND_ID = "rbxassetid://3744370691", -- PLACEHOLDER melee impact — VERIFY / REPLACE
+	HIT_SOUND_VOLUME = 0.9,
+	HIT_FLASH_DURATION = 0.1, -- white Highlight flash on a hit enemy/boss
+	SPARK_LIFETIME = 0.3, -- hit-spark part lifetime (seconds)
+	TELEGRAPH_SOUND_ID = "rbxassetid://1837835729", -- PLACEHOLDER windup "tell" cue — VERIFY / REPLACE
+	TELEGRAPH_SOUND_VOLUME = 0.6,
+	TELEGRAPH_PULSE_CYCLES = 4, -- enemy telegraph throbs per windup (loudness only — timing unchanged)
+
+	-- Camera shake events: { intensity = stud offset, duration = seconds }
+	SHAKE_DEAL = { intensity = 0.35, duration = 0.18 }, -- you LAND a hit
+	SHAKE_TAKE = { intensity = 0.9, duration = 0.3 }, -- you TAKE a hit (any source)
+	SHAKE_HEAVY = { intensity = 1.2, duration = 0.35 }, -- boss heavy attack (Overhead / Lunge)
+	SHAKE_ROAR = { intensity = 1.8, duration = 0.5 }, -- boss phase-2 roar
+
+	-- Movement weight (Phase 5.5 item 5) is intentionally NOT implemented: Roblox has
+	-- no clean accel/decel without custom movement that risks the dodge dash feel and
+	-- responsiveness. Per the brief, responsiveness wins — so it is skipped on purpose.
 }
