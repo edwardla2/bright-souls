@@ -107,4 +107,27 @@ return {
 	SPRINT_STAMINA_DRAIN = 15, -- stamina per second while sprinting + moving
 	SPRINT_KEY = Enum.KeyCode.LeftShift,
 	SPRINT_MIN_STAMINA = 5, -- can't START a sprint below this (but may continue down to 0)
+
+	-- Heavy attack (Phase 5.6b) — slower, committed, bigger; the stagger tool.
+	HEAVY_ATTACK_COST = 35,
+	HEAVY_ATTACK_DAMAGE = 55,
+	HEAVY_ATTACK_WINDUP = 0.5, -- committed wind-up before the hit
+	HEAVY_HITBOX_SIZE = Vector3.new(8, 5, 7),
+	HEAVY_HITBOX_REACH = 4.5,
+	HEAVY_POISE_DAMAGE = 60,
+	HEAVY_ATTACK_KEY = Enum.UserInputType.MouseButton2, -- right-click (trackpad: two-finger click)
+	HEAVY_ATTACK_FALLBACK_KEY = Enum.KeyCode.C, -- keyboard fallback (trackpad-safe)
+
+	-- Poise / stagger (Phase 5.6b)
+	ENEMY_MAX_POISE = 100,
+	BOSS_MAX_POISE = 250,
+	POISE_REGEN_DELAY = 2.0, -- seconds without a poise hit before it regenerates
+	POISE_REGEN_RATE = 30, -- poise per second
+	LIGHT_POISE_DAMAGE = 25,
+	STAGGER_DURATION = 1.2, -- seconds an entity is staggered when poise breaks
+
+	-- Backstab / critical (Phase 5.6b)
+	BACKSTAB_MULTIPLIER = 2.5,
+	BACKSTAB_ANGLE = 60, -- degrees from directly behind the target counted as a backstab
+	BACKSTAB_RANGE = 5,
 }

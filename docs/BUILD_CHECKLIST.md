@@ -172,6 +172,23 @@ Legend:
 
 ---
 
+## PHASE 5.6b — Attack depth: heavy / poise / backstab
+
+**Goal:** Heavy attack, poise/stagger, backstab — extend the hit path, don't rewrite.
+
+- [x] Heavy attack: RMB (+ C fallback), bigger cost/dmg/hitbox, committed wind-up; reuses parameterized resolveAttack
+- [x] CombatServer hit loop refactored into resolveAttack(player, isHeavy) — light path unchanged
+- [x] Poise as model attributes (Poise/MaxPoise/StaggerUntil); EnemyAI + BossAI read a stagger gate + regen
+- [x] Stagger interrupts a windup (no hit lands); staggered entity freezes for STAGGER_DURATION
+- [x] Backstab: rear hit (BACKSTAB_ANGLE/RANGE) crits x BACKSTAB_MULTIPLIER, server-side
+- [x] Heavy/crit scale the Phase 5.5 juice (bigger shake)
+- (TEST) Heavy (RMB) costs more, hits harder, commits longer; light unchanged
+- (TEST) Repeated hits stagger an enemy; heavies stagger faster; stagger cancels a boss windup
+- (TEST) Hitting from behind crits with bigger feedback
+- [x] `git commit -m "Phase 5.6b: heavy attack + poise/stagger + backstab"`
+
+---
+
 ## PHASE 6 — Build Area 1: The Ashen Shore (MVP DONE LINE)
 
 **Goal:** Assemble everything into the first playable slice.

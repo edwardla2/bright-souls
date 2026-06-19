@@ -176,6 +176,14 @@ local function performWindup(model, data, humanoid, root)
 		return
 	end
 
+	-- Phase 5.6b: poise broke during the wind-up — the swing is interrupted (no hit).
+	if os.clock() < (model:GetAttribute("StaggerUntil") or 0) then
+		stopTelegraph(model, data)
+		model:SetAttribute("Telegraphing", false)
+		data.state = "CHASE"
+		return
+	end
+
 	-- The dodge payoff: re-check the target's CURRENT distance and only land the
 	-- hit if they're still in range (+1 stud of slack). Roll out and you take none.
 	local targetHum = targetChar and targetChar:FindFirstChildOfClass("Humanoid")
@@ -199,6 +207,21 @@ end
 local function tickEnemy(model, data, humanoid, root)
 	if data.state == "DEAD" then
 		return
+	end
+
+	-- Phase 5.6b poise: freeze in place while staggered; otherwise regenerate poise
+	-- once enough time has passed since the last poise hit. This is the only gate the
+	-- state machine needs — the decision logic below is untouched.
+	if os.clock() < (model:GetAttribute("StaggerUntil") or 0) then
+		humanoid:MoveTo(root.Position)
+		return
+	end
+	local poise = model:GetAttribute("Poise")
+	if poise then
+		local maxPoise = model:GetAttribute("MaxPoise") or Config.ENEMY_MAX_POISE
+		if poise < maxPoise and os.clock() - (model:GetAttribute("PoiseHitTime") or 0) >= Config.POISE_REGEN_DELAY then
+			model:SetAttribute("Poise", math.min(maxPoise, poise + Config.POISE_REGEN_RATE * 0.1))
+		end
 	end
 
 	local targetChar, dist = getNearestPlayer(root.Position)
@@ -258,6 +281,8 @@ local function setupEnemy(model)
 	humanoid.MaxHealth = Config.ENEMY_HP
 	humanoid.Health = Config.ENEMY_HP
 	humanoid.WalkSpeed = Config.ENEMY_WALK_SPEED
+	model:SetAttribute("MaxPoise", Config.ENEMY_MAX_POISE) -- Phase 5.6b poise
+	model:SetAttribute("Poise", Config.ENEMY_MAX_POISE)
 
 	local data = {
 		state = "IDLE",

@@ -202,6 +202,14 @@ local function performAttack(boss, targetChar, dist)
 		return
 	end
 
+	-- Phase 5.6b: poise broke mid-wind-up — interrupt the swing (no hit lands).
+	if os.clock() < (boss.model:GetAttribute("StaggerUntil") or 0) then
+		stopTelegraph(boss)
+		boss.model:SetAttribute("Telegraphing", false)
+		boss.state = "CHASE"
+		return
+	end
+
 	stopTelegraph(boss)
 	boss.model:SetAttribute("Telegraphing", false)
 	doHit(boss, atk)
@@ -253,6 +261,19 @@ end
 
 -- One decision tick (only called while the boss is active and not mid-action).
 local function tickBoss(boss)
+	-- Phase 5.6b poise: a staggered boss freezes; otherwise regen poise after the delay.
+	if os.clock() < (boss.model:GetAttribute("StaggerUntil") or 0) then
+		boss.humanoid:MoveTo(boss.root.Position)
+		return
+	end
+	local poise = boss.model:GetAttribute("Poise")
+	if poise then
+		local maxPoise = boss.model:GetAttribute("MaxPoise") or Config.BOSS_MAX_POISE
+		if poise < maxPoise and os.clock() - (boss.model:GetAttribute("PoiseHitTime") or 0) >= Config.POISE_REGEN_DELAY then
+			boss.model:SetAttribute("Poise", math.min(maxPoise, poise + Config.POISE_REGEN_RATE * 0.1))
+		end
+	end
+
 	-- Phase transition the first time HP crosses the threshold.
 	if not boss.phase2Triggered and boss.humanoid.Health <= boss.humanoid.MaxHealth * Config.BOSS_PHASE2_THRESHOLD then
 		boss.phase2Triggered = true
@@ -397,6 +418,8 @@ local function setupBoss(model)
 	humanoid.MaxHealth = Config.BOSS_HP
 	humanoid.Health = Config.BOSS_HP
 	humanoid.WalkSpeed = Config.BOSS_WALK_SPEED
+	model:SetAttribute("MaxPoise", Config.BOSS_MAX_POISE) -- Phase 5.6b poise
+	model:SetAttribute("Poise", Config.BOSS_MAX_POISE)
 
 	local boss = {
 		model = model,

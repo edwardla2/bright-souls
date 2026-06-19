@@ -115,7 +115,7 @@ end
 -- Player hit connects -> stack the feedback
 ----------------------------------------------------------------------
 
-HitLanded.Event:Connect(function(humanoid, hitPart, attacker)
+HitLanded.Event:Connect(function(humanoid, hitPart, attacker, isHeavy, isCrit)
 	if not (humanoid and hitPart) then
 		return
 	end
@@ -127,7 +127,9 @@ HitLanded.Event:Connect(function(humanoid, hitPart, attacker)
 	end
 	spawnSpark(hitPart.Position)
 	if attacker and attacker:IsA("Player") then
-		ShakeCamera:FireClient(attacker, Config.SHAKE_DEAL.intensity, Config.SHAKE_DEAL.duration)
+		-- Heavy hits and backstab crits get a bigger pop (Phase 5.6b).
+		local mult = isCrit and 3 or (isHeavy and 1.8 or 1)
+		ShakeCamera:FireClient(attacker, Config.SHAKE_DEAL.intensity * mult, Config.SHAKE_DEAL.duration)
 	end
 end)
 

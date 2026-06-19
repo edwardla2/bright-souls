@@ -22,6 +22,7 @@ local Config = require(ReplicatedStorage.Shared.Config)
 
 local Remotes = ReplicatedStorage:WaitForChild("Remotes")
 local AttackEvent = Remotes:WaitForChild("AttackEvent")
+local HeavyAttack = Remotes:WaitForChild("HeavyAttack")
 local DodgeEvent = Remotes:WaitForChild("DodgeEvent")
 local StaminaSync = Remotes:WaitForChild("StaminaSync")
 
@@ -102,41 +103,46 @@ RunService.Heartbeat:Connect(function(dt)
 	end
 end)
 
--- ATTACK: spend stamina, wind up 0.18s, then sweep a box in front of the
--- attacker and damage every unique humanoid found (unless it has i-frames).
-AttackEvent.OnServerEvent:Connect(function(player)
-	if not playerData[player] then
+-- Poise (Phase 5.6b): poise lives as model attributes so EnemyAI/BossAI can read the
+-- stagger gate without this script knowing their internals. No-op for entities without
+-- a Poise attribute (e.g. players). When poise breaks, the entity staggers and resets.
+local function applyPoise(model, poiseDamage)
+	local poise = model:GetAttribute("Poise")
+	if poise == nil then
 		return
 	end
+	model:SetAttribute("PoiseHitTime", os.clock())
+	poise = poise - poiseDamage
+	if poise <= 0 then
+		model:SetAttribute("Poise", model:GetAttribute("MaxPoise") or Config.ENEMY_MAX_POISE)
+		model:SetAttribute("StaggerUntil", os.clock() + Config.STAGGER_DURATION)
+	else
+		model:SetAttribute("Poise", poise)
+	end
+end
 
+-- Shared hit resolution for LIGHT and HEAVY attacks (parameterized, not duplicated).
+-- Sweeps a box in front of the attacker; for each unique living humanoid not i-framing:
+-- records the attacker, applies damage (x BACKSTAB on rear hits), applies poise, and
+-- signals the juice layer. Light behaviour is identical to before.
+local function resolveAttack(player, isHeavy)
 	local character = player.Character
 	local root = character and character:FindFirstChild("HumanoidRootPart")
 	if not root then
 		return
 	end
 
-	if not spendStamina(player, Config.ATTACK_COST) then
-		return
-	end
+	local reach = isHeavy and Config.HEAVY_HITBOX_REACH or Config.HITBOX_REACH
+	local size = isHeavy and Config.HEAVY_HITBOX_SIZE or Config.HITBOX_SIZE
+	local damage = isHeavy and Config.HEAVY_ATTACK_DAMAGE or Config.ATTACK_DAMAGE
+	local poiseDamage = isHeavy and Config.HEAVY_POISE_DAMAGE or Config.LIGHT_POISE_DAMAGE
 
-	-- Wind-up: the hitbox only exists at the moment the swing connects.
-	task.wait(0.18)
-
-	-- Re-resolve the character in case the player died / respawned mid-swing.
-	character = player.Character
-	root = character and character:FindFirstChild("HumanoidRootPart")
-	if not root then
-		return
-	end
-
-	-- Center the hitbox HITBOX_REACH studs ahead of the root part.
-	local hitboxCFrame = root.CFrame * CFrame.new(0, 0, -Config.HITBOX_REACH)
-
+	local hitboxCFrame = root.CFrame * CFrame.new(0, 0, -reach)
 	local overlapParams = OverlapParams.new()
 	overlapParams.FilterType = Enum.RaycastFilterType.Exclude
 	overlapParams.FilterDescendantsInstances = { character }
 
-	local parts = workspace:GetPartBoundsInBox(hitboxCFrame, Config.HITBOX_SIZE, overlapParams)
+	local parts = workspace:GetPartBoundsInBox(hitboxCFrame, size, overlapParams)
 
 	local seen = {} -- de-dupe: a humanoid owns many parts, damage it once
 	for _, part in ipairs(parts) do
@@ -149,10 +155,7 @@ AttackEvent.OnServerEvent:Connect(function(player)
 			local targetPlayer = Players:GetPlayerFromCharacter(model)
 			local targetData = targetPlayer and playerData[targetPlayer]
 			if not (targetData and targetData.iframes) then
-				-- Phase 2: record who dealt the blow BEFORE damage lands, so if this
-				-- is the killing hit the enemy's death (which drops its Runes) is
-				-- attributed to the right player. PlayerData reads this LastAttacker
-				-- to award runes. Lives on the enemy until it despawns (short-lived).
+				-- Phase 2: record who dealt the blow BEFORE damage (rune attribution).
 				local lastAttacker = model:FindFirstChild("LastAttacker")
 				if not lastAttacker then
 					lastAttacker = Instance.new("ObjectValue")
@@ -161,17 +164,62 @@ AttackEvent.OnServerEvent:Connect(function(player)
 				end
 				lastAttacker.Value = player
 
-				humanoid:TakeDamage(Config.ATTACK_DAMAGE)
+				-- Backstab: rear hit within BACKSTAB_ANGLE of the target's back, within
+				-- BACKSTAB_RANGE, crits for BACKSTAB_MULTIPLIER damage.
+				local finalDamage, isCrit = damage, false
+				local troot = model:FindFirstChild("HumanoidRootPart")
+				if troot then
+					local toPlayer = root.Position - troot.Position
+					local dist = toPlayer.Magnitude
+					if dist > 0 and dist <= Config.BACKSTAB_RANGE then
+						local behind = (-troot.CFrame.LookVector):Dot(toPlayer.Unit)
+						if behind >= math.cos(math.rad(Config.BACKSTAB_ANGLE)) then
+							finalDamage = damage * Config.BACKSTAB_MULTIPLIER
+							isCrit = true
+						end
+					end
+				end
 
-				-- Phase 5.5 (juice): signal the connecting hit so JuiceServer can add
-				-- hitstop/sound/flash/spark/shake. Additive — does NOT change the damage
-				-- above. Guarded so the test harness (HitLanded == nil) is unaffected.
+				humanoid:TakeDamage(finalDamage)
+				applyPoise(model, poiseDamage)
+
+				-- Phase 5.5 juice (additive; HitLanded is nil in the test harness).
 				if HitLanded then
-					HitLanded:Fire(humanoid, part, player)
+					HitLanded:Fire(humanoid, part, player, isHeavy, isCrit)
 				end
 			end
 		end
 	end
+end
+
+-- LIGHT ATTACK: spend stamina, wind up 0.18s, resolve. Behaviour unchanged.
+AttackEvent.OnServerEvent:Connect(function(player)
+	if not playerData[player] then
+		return
+	end
+	if not (player.Character and player.Character:FindFirstChild("HumanoidRootPart")) then
+		return
+	end
+	if not spendStamina(player, Config.ATTACK_COST) then
+		return
+	end
+	task.wait(0.18)
+	resolveAttack(player, false)
+end)
+
+-- HEAVY ATTACK: pricier, slower committed wind-up; bigger hitbox/damage/poise.
+HeavyAttack.OnServerEvent:Connect(function(player)
+	if not playerData[player] then
+		return
+	end
+	if not (player.Character and player.Character:FindFirstChild("HumanoidRootPart")) then
+		return
+	end
+	if not spendStamina(player, Config.HEAVY_ATTACK_COST) then
+		return
+	end
+	task.wait(Config.HEAVY_ATTACK_WINDUP)
+	resolveAttack(player, true)
 end)
 
 -- DODGE: spend stamina, grant i-frames, and launch a short BodyVelocity burst

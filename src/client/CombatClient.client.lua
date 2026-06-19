@@ -23,6 +23,7 @@ local Config = require(ReplicatedStorage.Shared.Config)
 
 local Remotes = ReplicatedStorage:WaitForChild("Remotes")
 local AttackEvent = Remotes:WaitForChild("AttackEvent")
+local HeavyAttack = Remotes:WaitForChild("HeavyAttack")
 local DodgeEvent = Remotes:WaitForChild("DodgeEvent")
 local StaminaSync = Remotes:WaitForChild("StaminaSync")
 
@@ -157,6 +158,19 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
 				attackTrack:AdjustSpeed(1.2)
 			end
 			task.delay(0.55, function()
+				busy = false
+			end)
+		end
+	elseif input.UserInputType == Config.HEAVY_ATTACK_KEY or input.KeyCode == Config.HEAVY_ATTACK_FALLBACK_KEY then
+		-- HEAVY: slower swing, longer commit (can't cancel) than light.
+		if currentStamina >= Config.HEAVY_ATTACK_COST then
+			busy = true
+			HeavyAttack:FireServer()
+			if attackTrack then
+				attackTrack:Play()
+				attackTrack:AdjustSpeed(0.6)
+			end
+			task.delay(Config.HEAVY_ATTACK_WINDUP + 0.7, function()
 				busy = false
 			end)
 		end
