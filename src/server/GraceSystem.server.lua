@@ -154,7 +154,7 @@ local function setupGrace(graceInstance)
 	levelPrompt.Name = "LevelPrompt"
 	levelPrompt.ActionText = "Level Up"
 	levelPrompt.ObjectText = "Site of Grace"
-	levelPrompt.KeyboardKeyCode = Enum.KeyCode.F
+	levelPrompt.KeyboardKeyCode = Enum.KeyCode.G -- moved off F so lock-on can use F (Phase 5.6a rebind)
 	levelPrompt.GamepadKeyCode = Enum.KeyCode.ButtonY
 	levelPrompt.HoldDuration = 0
 	levelPrompt.MaxActivationDistance = 12

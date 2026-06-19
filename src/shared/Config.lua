@@ -91,9 +91,10 @@ return {
 	-- no clean accel/decel without custom movement that risks the dodge dash feel and
 	-- responsiveness. Per the brief, responsiveness wins — so it is skipped on purpose.
 
-	-- Lock-on targeting (Phase 5.6a). Q=dodge, R=flask, F=Grace prompt, LeftShift=sprint
-	-- are taken, so lock-on uses the middle mouse button; the wheel switches targets.
-	LOCKON_KEY = Enum.UserInputType.MouseButton3, -- toggle lock-on
+	-- Lock-on targeting (Phase 5.6a). Keyboard-only so a trackpad works (no mouse): F
+	-- toggles lock, Tab cycles targets. The Grace "Level Up" prompt was moved off F to G.
+	LOCKON_KEY = Enum.KeyCode.F, -- toggle lock-on
+	LOCKON_SWITCH_KEY = Enum.KeyCode.Tab, -- cycle to the next-nearest target while locked
 	LOCKON_RANGE = 60, -- studs; max range to acquire a target
 	LOCKON_BREAK_RANGE = 70, -- studs; lock auto-breaks beyond this
 	LOCKON_CAM_DISTANCE = 14, -- studs the locked camera sits behind the player

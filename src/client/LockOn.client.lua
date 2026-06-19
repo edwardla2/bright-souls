@@ -1,12 +1,16 @@
 --[[
 	LockOn.client.lua  (StarterPlayer.StarterPlayerScripts)
 
-	Phase 5.6a: souls-style lock-on targeting. Middle mouse (Config.LOCKON_KEY) toggles
-	lock onto the nearest enemy/boss in front of the camera; the mouse wheel switches to
-	the next-nearest target. While locked: the camera frames the target, a gold diamond
-	reticle floats over it, and the character faces it (AutoRotate off) so movement
-	becomes strafe/circle. Lock auto-breaks if the target dies, gets too far, or you
-	toggle off / respawn.
+	Phase 5.6a: souls-style lock-on targeting. F (Config.LOCKON_KEY) toggles lock onto
+	the nearest enemy/boss in front of the camera; Tab (Config.LOCKON_SWITCH_KEY) cycles
+	to the next-nearest target. Keyboard-only so it works on a trackpad (no mouse). While
+	locked: the camera frames the target, a gold diamond reticle floats over it, and the
+	character faces it (AutoRotate off) so movement becomes strafe/circle. Lock
+	auto-breaks if the target dies, gets too far, or you toggle off / respawn.
+
+	Control scheme:
+	  Move: WASD/arrows | Attack: LMB | Dodge: Q | Sprint: LShift | Flask: R |
+	  Lock-on: F | Switch target: Tab
 
 	The current target is sent to the server via "LockTarget" (target or nil) so future
 	server systems (directional dodge, backstab) can read the player's lock state.
@@ -157,9 +161,10 @@ end
 
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
 	if gameProcessed then
-		return
+		return -- ignore presses consumed by other UI (text fields, ProximityPrompts...)
 	end
-	if input.UserInputType == Config.LOCKON_KEY then
+	if input.KeyCode == Config.LOCKON_KEY then
+		-- F: toggle lock on/off.
 		if lockedTarget then
 			setTarget(nil)
 		else
@@ -168,17 +173,13 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
 				setTarget(t)
 			end
 		end
-	end
-end)
-
-UserInputService.InputChanged:Connect(function(input, gameProcessed)
-	if gameProcessed then
-		return
-	end
-	if lockedTarget and input.UserInputType == Enum.UserInputType.MouseWheel then
-		local nextTarget = acquireTarget(lockedTarget)
-		if nextTarget then
-			setTarget(nextTarget)
+	elseif input.KeyCode == Config.LOCKON_SWITCH_KEY then
+		-- Tab: cycle to the next-nearest target (only while already locked).
+		if lockedTarget then
+			local nextTarget = acquireTarget(lockedTarget)
+			if nextTarget then
+				setTarget(nextTarget)
+			end
 		end
 	end
 end)
