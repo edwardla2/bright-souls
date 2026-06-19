@@ -154,6 +154,24 @@ Legend:
 
 ---
 
+## PHASE 5.6a — Lock-on + Sprint (combat depth)
+
+**Goal:** Add lock-on targeting and sprint — additive, reads existing systems.
+
+- [x] Lock-on (LockOn.client.lua): MB3 toggle, wheel switches, reticle, camera framing, face target
+- [x] Lock-on auto-breaks on target death / >70 studs / toggle / respawn
+- [x] LockTarget remote fires target|nil to server (stored in playerData for next phase)
+- [x] Dodge target-relative while locked — zero dodge change (locked camera makes MoveDirection target-relative)
+- [x] Sprint (Sprint.client.lua + guarded CombatServer drain): LeftShift, SPRINT_SPEED, drains the shared stamina pool, pauses regen
+- (TEST) MB3 locks nearest target; reticle + camera framing appear
+- (TEST) Strafe/circle while locked; wheel switches targets
+- (TEST) Lock breaks on target death / running away
+- (TEST) Dodge rolls relative to target while locked
+- (TEST) Sprint speeds up + drains stamina; returns to normal on release / empty
+- [x] `git commit -m "Phase 5.6a: lock-on targeting + sprint"`
+
+---
+
 ## PHASE 6 — Build Area 1: The Ashen Shore (MVP DONE LINE)
 
 **Goal:** Assemble everything into the first playable slice.

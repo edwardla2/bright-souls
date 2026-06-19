@@ -31,7 +31,9 @@
         "StatSync": { "$className": "RemoteEvent" },
         "OpenLevelMenu": { "$className": "RemoteEvent" },
         "BossSync": { "$className": "RemoteEvent" },
-        "ShakeCamera": { "$className": "RemoteEvent" }
+        "ShakeCamera": { "$className": "RemoteEvent" },
+        "Sprint": { "$className": "RemoteEvent" },
+        "LockTarget": { "$className": "RemoteEvent" }
       }
     },
 

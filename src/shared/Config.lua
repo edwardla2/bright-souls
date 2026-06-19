@@ -90,4 +90,20 @@ return {
 	-- Movement weight (Phase 5.5 item 5) is intentionally NOT implemented: Roblox has
 	-- no clean accel/decel without custom movement that risks the dodge dash feel and
 	-- responsiveness. Per the brief, responsiveness wins — so it is skipped on purpose.
+
+	-- Lock-on targeting (Phase 5.6a). Q=dodge, R=flask, F=Grace prompt, LeftShift=sprint
+	-- are taken, so lock-on uses the middle mouse button; the wheel switches targets.
+	LOCKON_KEY = Enum.UserInputType.MouseButton3, -- toggle lock-on
+	LOCKON_RANGE = 60, -- studs; max range to acquire a target
+	LOCKON_BREAK_RANGE = 70, -- studs; lock auto-breaks beyond this
+	LOCKON_CAM_DISTANCE = 14, -- studs the locked camera sits behind the player
+	LOCKON_CAM_HEIGHT = 6, -- studs the locked camera sits above the player
+	LOCKON_CAM_SMOOTH = 0.15, -- camera lerp alpha per frame (smaller = smoother/slower)
+
+	-- Sprint (Phase 5.6a) — drains the SAME stamina pool as attacks/dodges.
+	BASE_WALK_SPEED = 16, -- default character WalkSpeed (the Roblox default)
+	SPRINT_SPEED = 24,
+	SPRINT_STAMINA_DRAIN = 15, -- stamina per second while sprinting + moving
+	SPRINT_KEY = Enum.KeyCode.LeftShift,
+	SPRINT_MIN_STAMINA = 5, -- can't START a sprint below this (but may continue down to 0)
 }

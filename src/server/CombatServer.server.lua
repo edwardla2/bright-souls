@@ -235,4 +235,43 @@ if ServerStorage then
 			syncStamina(player)
 		end
 	end)
+
+	-- Phase 5.6a (additive, guarded): SPRINT drains the EXISTING stamina pool, and
+	-- LOCKTARGET records the player's lock state for future server systems. The dodge
+	-- handler, the regen Heartbeat, and spendStamina above are all left untouched.
+	local Sprint = Remotes:WaitForChild("Sprint")
+	Sprint.OnServerEvent:Connect(function(player, sprinting)
+		local data = playerData[player]
+		if data then
+			data.sprinting = sprinting and true or false
+		end
+	end)
+
+	local LockTarget = Remotes:WaitForChild("LockTarget")
+	LockTarget.OnServerEvent:Connect(function(player, target)
+		local data = playerData[player]
+		if data then
+			data.lockTarget = (typeof(target) == "Instance") and target or nil
+		end
+	end)
+
+	-- Drain the shared pool while sprinting + actually moving. Separate from the regen
+	-- Heartbeat; it pauses regen the SAME way a spend does (by bumping lastUseTime), so
+	-- the existing delay/throttle behaviour is reused, not duplicated.
+	RunService.Heartbeat:Connect(function(dt)
+		for player, data in pairs(playerData) do
+			if data.sprinting and data.stamina > 0 then
+				local character = player.Character
+				local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+				if humanoid and humanoid.MoveDirection.Magnitude > 0.05 then
+					data.stamina = math.max(0, data.stamina - Config.SPRINT_STAMINA_DRAIN * dt)
+					data.lastUseTime = os.clock()
+					syncStamina(player)
+					if data.stamina <= 0 then
+						data.sprinting = false
+					end
+				end
+			end
+		end
+	end)
 end
