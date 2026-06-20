@@ -34,7 +34,8 @@
         "ShakeCamera": { "$className": "RemoteEvent" },
         "Sprint": { "$className": "RemoteEvent" },
         "LockTarget": { "$className": "RemoteEvent" },
-        "HeavyAttack": { "$className": "RemoteEvent" }
+        "HeavyAttack": { "$className": "RemoteEvent" },
+        "EquipWeapon": { "$className": "RemoteEvent" }
       }
     },
 

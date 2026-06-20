@@ -103,6 +103,18 @@ RunService.Heartbeat:Connect(function(dt)
 	end
 end)
 
+-- Phase 5.7a: attack stats come from the player's EQUIPPED WEAPON, which PlayerData
+-- publishes as player attributes (Wpn*). Falls back to the flat Config constants when
+-- absent (unequipped player, or the headless test harness) — and broken_sword's
+-- published values EQUAL these Config values, so the default plays byte-identically.
+local function weaponStat(player, attr, fallback)
+	local v = player:GetAttribute(attr)
+	if v == nil then
+		return fallback
+	end
+	return v
+end
+
 -- Poise (Phase 5.6b): poise lives as model attributes so EnemyAI/BossAI can read the
 -- stagger gate without this script knowing their internals. No-op for entities without
 -- a Poise attribute (e.g. players). When poise breaks, the entity staggers and resets.
